@@ -1,7 +1,29 @@
 const express = require("express")
 const app = express()
+var morgan = require("morgan")
 
 app.use(express.json())
+
+morgan.token("body", function (req, res) {
+  // console.log(req.body)
+  return JSON.stringify(req.body)
+})
+
+// Optimized code ↓
+// morgan.token("body", (req) => JSON.stringify(req.body))
+
+const logFunction = (tokens, req, res) => {
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens["response-time"](req, res),
+    "ms",
+    tokens.body(req, res),
+  ].join(" ")
+}
+
+app.use(morgan(logFunction))
 
 let phoneBook = [
   {
@@ -67,7 +89,7 @@ app.delete("/api/persons/:id", (req, res) => {
 
 app.get("/info", (req, res) => {
   res.send(
-    `<p>Phonebook has info for ${phoneBook.length} people <br>
+    `<p>Phonebook has info for ${phoneBook.length} people <br> ${Date()}
   </p>`
   )
 })
