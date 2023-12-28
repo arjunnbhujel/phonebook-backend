@@ -4,13 +4,13 @@ var morgan = require("morgan")
 
 app.use(express.json())
 
-// morgan.token("body", function (req, res) {
-//   // console.log(req.body)
-//   return JSON.stringify(req.body)
-// })
+morgan.token("body", function (req, res) {
+  // console.log(req.body)
+  return JSON.stringify(req.body)
+})
 
 // Optimized code ↓
-morgan.token("body", (req) => JSON.stringify(req.body))
+// morgan.token("body", (req) => JSON.stringify(req.body))
 
 const logFunction = (tokens, req, res) => {
   return [
