@@ -7,11 +7,9 @@ const Phone = require("./models/phone")
 
 var morgan = require("morgan")
 
-// const Phone = mongoose.model("Phone", phoneSchema)
-
-app.use(cors())
-app.use(express.json())
 app.use(express.static("build"))
+app.use(express.json())
+app.use(cors())
 
 // Configuring Morgan Logging
 
@@ -19,9 +17,6 @@ morgan.token("body", function (req, res) {
   // console.log(req.body)
   return JSON.stringify(req.body)
 })
-
-// Optimized code ↓
-// morgan.token("body", (req) => JSON.stringify(req.body))
 
 const logFunction = (tokens, req, res) => {
   return [
@@ -36,15 +31,7 @@ const logFunction = (tokens, req, res) => {
 
 app.use(morgan(logFunction))
 
-// const nameChecker = (name) => {
-//   let existingName = [...phoneBook.map((phone) => phone.name.toLowerCase())]
-//   return existingName.includes(name.toLowerCase())
-// }
-
-// const numberChecker = (number) => {
-//   let existingNumber = [...phoneBook.map((phone) => phone.number)]
-//   return existingNumber.includes(number)
-// }
+//getting api data in Localhost
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World</h1>")
@@ -52,27 +39,38 @@ app.get("/", (req, res) => {
 
 app.get("/api/persons", (req, res) => {
   Phone.find({}).then((book) => {
+    // console.log(book)
     res.json(book)
   })
 })
 
-app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id)
-  phoneBook = phoneBook.filter((phone) => phone.id !== id)
-  res.status(204).end()
+app.delete("/api/persons/:id", (req, res, next) => {
+  Phone.findByIdAndDelete(req.params.id)
+    .then((res) => {
+      res.status(204).end()
+    })
+    .catch((error) => next(error))
 })
 
 app.get("/info", (req, res) => {
-  res.send(
-    `<p>Phonebook has info for ${phoneBook.length} people <br> ${Date()}
-  </p>`
-  )
+  Phone.find({}).then((book) => {
+    res.send(
+      `<p>Phonebook has info for ${book.length} people <br> ${Date()}
+    </p>`
+    )
+  })
 })
 
 app.get("/api/persons/:id", (req, res) => {
-  Phone.findById(req.params.id).then((phone) => {
-    res.json(phone)
-  })
+  Phone.findById(req.params.id)
+    .then((phone) => {
+      if (phone) {
+        res.json(phone)
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch((error) => next(error))
 })
 
 app.post("/api/persons", (req, res) => {
@@ -88,6 +86,23 @@ app.post("/api/persons", (req, res) => {
     })
   }
 
+  app.put("/api/persons/:id", (req, res, next) => {
+    const body = req.body
+
+    const contact = {
+      name: body.name,
+      number: body.number,
+      date: new Date(),
+    }
+
+    Phone.findByIdAndUpdate(req.params.id, contact, { new: true })
+      .then((updatedContact) => {
+        console.log(updatedContact)
+        res.json(updatedContact)
+      })
+      .catch((error) => next(error))
+  })
+
   // if (body.content === undefined) {
   //   return res.status(400).json({ error: "content missing" })
   // }
@@ -102,6 +117,19 @@ app.post("/api/persons", (req, res) => {
     console.log(savedDetail)
   })
 })
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" })
+  }
+
+  next(error)
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
