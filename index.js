@@ -46,8 +46,8 @@ app.get("/api/persons", (req, res) => {
 
 app.delete("/api/persons/:id", (req, res, next) => {
   Phone.findByIdAndDelete(req.params.id)
-    .then((res) => {
-      res.status(204).end()
+    .then((response) => {
+      response.status(204).end()
     })
     .catch((error) => next(error))
 })
@@ -102,10 +102,6 @@ app.post("/api/persons", (req, res) => {
       })
       .catch((error) => next(error))
   })
-
-  // if (body.content === undefined) {
-  //   return res.status(400).json({ error: "content missing" })
-  // }
 
   console.log(body)
   const phoneDetail = new Phone({
