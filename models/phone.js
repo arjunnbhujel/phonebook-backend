@@ -18,7 +18,6 @@ mongoose
 const phoneSchema = new mongoose.Schema({
   name: String,
   number: String,
-  date: { type: Date, default: Date.now },
 })
 
 phoneSchema.set("toJSON", {
