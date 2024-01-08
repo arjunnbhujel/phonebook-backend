@@ -92,7 +92,6 @@ app.post("/api/persons", (req, res) => {
     const contact = {
       name: body.name,
       number: body.number,
-      date: new Date(),
     }
 
     Phone.findByIdAndUpdate(req.params.id, contact, { new: true })
