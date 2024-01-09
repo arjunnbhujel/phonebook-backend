@@ -61,7 +61,7 @@ app.get("/info", (req, res) => {
   })
 })
 
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   Phone.findById(req.params.id)
     .then((phone) => {
       if (phone) {
