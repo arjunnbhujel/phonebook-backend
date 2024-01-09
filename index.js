@@ -45,8 +45,8 @@ app.get("/api/persons", (req, res) => {
 })
 
 app.delete("/api/persons/:id", (req, res, next) => {
-  Phone.findOneAndDelete(req.params.id)
-    .then((result) => {
+  Phone.findByIdAndDelete(req.params.id)
+    .then(() => {
       res.status(204).end()
     })
     .catch((error) => next(error))
@@ -73,51 +73,56 @@ app.get("/api/persons/:id", (req, res) => {
     .catch((error) => next(error))
 })
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body
 
-  if (!body.name) {
-    return res.status(400).json({
-      error: "Please Enter the Person Name",
-    })
-  } else if (!body.number) {
-    return res.status(400).json({
-      error: "Please Enter the Person Number",
-    })
-  }
-
-  app.put("/api/persons/:id", (req, res, next) => {
-    const body = req.body
-
-    const contact = {
-      name: body.name,
-      number: body.number,
-    }
-
-    Phone.findByIdAndUpdate(req.params.id, contact, { new: true })
-      .then((updatedContact) => {
-        console.log(updatedContact)
-        res.json(updatedContact)
-      })
-      .catch((error) => next(error))
-  })
-
-  console.log(body)
+  // console.log(body)
   const phoneDetail = new Phone({
     name: body.name,
     number: body.number,
   })
-  phoneDetail.save().then((savedDetail) => {
-    res.json(savedDetail)
-    console.log(savedDetail)
-  })
+  phoneDetail
+    .save()
+    .then((savedDetail) => {
+      res.json(savedDetail)
+      // console.log(savedDetail)
+    })
+    .catch((error) => next(error))
 })
+
+app.put("/api/persons/:id", (req, res, next) => {
+  const body = req.body
+
+  const contact = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Phone.findByIdAndUpdate(req.params.id, contact, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
+    .then((updatedContact) => {
+      // console.log(updatedContact)
+      res.json(updatedContact)
+    })
+    .catch((error) => next(error))
+})
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" })
+}
+
+app.use(unknownEndpoint)
 
 const errorHandler = (error, req, res, next) => {
   console.error(error.message)
 
   if (error.name === "CastError") {
     return res.status(400).send({ error: "malformatted id" })
+  } else if (error.name === "validationError") {
+    return res.status(400).json({ error: error.message })
   }
 
   next(error)

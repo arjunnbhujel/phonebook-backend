@@ -80,9 +80,8 @@ const App = () => {
           })
         })
         .catch((error) => {
-          console.error(error)
           setNotification({
-            text: error.response.data.error,
+            text: "sorry",
             type: NOTIFICATION_TYPE.ERROR,
           })
         })
